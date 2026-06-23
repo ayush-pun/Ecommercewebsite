@@ -5,21 +5,18 @@ import Contactus from "./pages/Contactus";
 import About from "./pages/About";
 import Product from "./pages/Product";
 import Navbar from "./component/Navbar";
+import Demo from "./component/demo";
+import Clock from "./component/Demo2";
+import ApiPractice from "./Practice1/ApiPractice";
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-white text-zinc-900">
-        <Navbar />
-
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/aboutus" element={<About />} />
-          <Route path="/contactus" element={<Contactus />} />
-          <Route path="/products" element={<Product />} />
-        </Routes>
+ 
+     <div>
+      <ApiPractice/>
       </div>
-    </BrowserRouter>
+
+     
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import Searchbar from "../component/Searchbar";
@@ -6,8 +6,12 @@ import Filter from "../component/Filter";
 import Sortdropdown from "../component/Sortdropdown";
 import ProductData from "../dataset/ProductData";
 import Card from "../component/Card";
+import Pagination from "../component/Pagination";
 
 const Product = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemperpage = 8;
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const category = searchParams.get("category") || "all";
@@ -18,107 +22,134 @@ const Product = () => {
   function handlefilter(value) {
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
+
       if (value === "ALL") {
         params.delete("category");
       } else {
         params.set("category", value);
       }
-      return params;
-      
-    });
 
+      return params;
+    });
   }
+
   // UPDATE SEARCH IN URL
   function handlesearch(value) {
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
+
       if (!value) {
         params.delete("search");
       } else {
         params.set("search", value);
       }
+
       return params;
     });
   }
 
-  function handlesort(value){
-    console.log(value);
-    setSearchParams((prev)=>{
+  // UPDATE SORT IN URL
+  function handlesort(value) {
+    setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
-      if (!value){
-        params.delete("sort")
-      }else{
-        params.set("sort",value)
+
+      if (!value) {
+        params.delete("sort");
+      } else {
+        params.set("sort", value);
       }
+
       return params;
-    })
+    });
   }
 
-  // FINAL DATA PIPELINE (NO useEffect, NO state)
-  const processedItems = useMemo(() => {
-    let items = [...ProductData];
+  // FILTER + SEARCH + SORT
+  let processedItems = [...ProductData];
 
-    // CATEGORY FILTER
-    if (category !== "all") {
-      items = items.filter((item) => item.category === category.toLowerCase());
-    }
+  if (category !== "all") {
+    processedItems = processedItems.filter(
+      (item) => item.category === category.toLowerCase()
+    );
+  }
 
-    // SEARCH FILTER
-    if (search) {
-      items = items.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
+  if (search) {
+    processedItems = processedItems.filter((item) =>
+      item.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }
 
-    // SORT
-    if (sort === "hightolow") {
-      items.sort((a, b) => b.price - a.price);
-    }
+  if (sort === "hightolow") {
+    processedItems.sort((a, b) => b.price - a.price);
+  }
 
-    if (sort === "lowtohigh") {
-      items.sort((a, b) => a.price - b.price);
-    }
+  if (sort === "lowtohigh") {
+    processedItems.sort((a, b) => a.price - b.price);
+  }
 
-    if (sort === "newestfirst") {
-      items.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-    }
+  if (sort === "newestfirst") {
+    processedItems.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  }
 
-    if (sort === "highestrating") {
-      items.sort((a, b) => b.rating - a.rating);
-    }
+  if (sort === "highestrating") {
+    processedItems.sort((a, b) => b.rating - a.rating);
+  }
 
-    return items;
-  }, [category, search, sort]);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(processedItems.length / itemperpage)
+  );
+
+  // Prevent invalid page numbers
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const startIndex = (safeCurrentPage - 1) * itemperpage;
+
+  const paginatedItems = processedItems.slice(
+    startIndex,
+    startIndex + itemperpage
+  );
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-10">
-
-      {/* CONTROLS */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-10">
-
         <Searchbar
           search={search}
           setsearch={handlesearch}
         />
+
         <div className="flex flex-col md:flex-row gap-4">
           <Filter
             handlefilter={handlefilter}
             active={category}
           />
-          <Sortdropdown setsortitem={handlesort}/>
+
+          <Sortdropdown
+            setsortitem={handlesort}
+          />
         </div>
-
       </div>
 
-      {/* PRODUCTS */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {processedItems.map((item) => (
-          <Card key={item.id} item={item} />
-        ))}
+        {paginatedItems.length > 0 ? (
+          paginatedItems.map((item) => (
+            <Card key={item.id} item={item} />
+          ))
+        ) : (
+          <p className="col-span-full text-center">
+            No products found
+          </p>
+        )}
       </div>
 
+      {processedItems.length > 0 && (
+        <Pagination
+          currentPage={safeCurrentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+        />
+      )}
     </main>
   );
 };
