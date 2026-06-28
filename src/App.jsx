@@ -8,16 +8,17 @@ import Navbar from "./component/Navbar";
 import Demo from "./component/demo";
 import Clock from "./component/Demo2";
 import ApiPractice from "./Practice1/ApiPractice";
+import DataDisplay from "./customhook/DataDisplay";
 
 const App = () => {
   return (
  
      <div>
-      <ApiPractice/>
+      <DataDisplay/>
       </div>
 
      
   );
 };
 
-export default App;``
+export default App;
